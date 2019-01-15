@@ -49,7 +49,7 @@ import { mergeComponents } from './common'
  * @param {*} backend
  */
 export default function withDragAndDrop(Calendar) {
-  return class extends React.Component {
+  class CalendarWrapper extends React.Component {
     static propTypes = {
       selectable: PropTypes.oneOf([true, false, 'ignoreEvents']),
       resizable: PropTypes.bool,
@@ -91,10 +91,12 @@ export default function withDragAndDrop(Calendar) {
       return <Calendar {...props} components={this.components} />
     }
   }
+
+  return CalendarWrapper
 }
 
 export function withDragAndDropContenxt(Element) {
-  return class extends React.Component {
+  class DragAndDropContenxt extends React.Component {
     static propTypes = {
       onEventDrop: PropTypes.func,
       onEventResize: PropTypes.func,
@@ -173,4 +175,6 @@ export function withDragAndDropContenxt(Element) {
       return <Element {...props} />
     }
   }
+
+  return DragAndDropContenxt
 }
