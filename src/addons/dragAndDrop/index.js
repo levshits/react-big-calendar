@@ -1,2 +1,4 @@
-import withDragAndDrop from './withDragAndDrop'
+import withDragAndDrop, { withDragAndDropContenxt } from './withDragAndDrop'
 export default withDragAndDrop
+
+export { withDragAndDropContenxt }

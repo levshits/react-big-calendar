@@ -49,14 +49,8 @@ import { mergeComponents } from './common'
  * @param {*} backend
  */
 export default function withDragAndDrop(Calendar) {
-  class DragAndDropCalendar extends React.Component {
+  return class extends React.Component {
     static propTypes = {
-      onEventDrop: PropTypes.func,
-      onEventResize: PropTypes.func,
-
-      draggableAccessor: accessor,
-      resizableAccessor: accessor,
-
       selectable: PropTypes.oneOf([true, false, 'ignoreEvents']),
       resizable: PropTypes.bool,
       components: PropTypes.object,
@@ -64,15 +58,54 @@ export default function withDragAndDrop(Calendar) {
     }
 
     static defaultProps = {
-      // TODO: pick these up from Calendar.defaultProps
       components: {},
       draggableAccessor: null,
       resizableAccessor: null,
       step: 30,
     }
 
-    static contextTypes = {
-      dragDropManager: PropTypes.object,
+    constructor(...args) {
+      super(...args)
+
+      const { components } = this.props
+
+      this.components = mergeComponents(components, {
+        eventWrapper: EventWrapper,
+        eventContainerWrapper: EventContainerWrapper,
+        weekWrapper: WeekWrapper,
+      })
+    }
+
+    render() {
+      const { selectable, ...props } = this.props
+      const { interacting } = this.state
+
+      props.selectable = selectable ? 'ignoreEvents' : false
+
+      props.className = cn(
+        props.className,
+        'rbc-addons-dnd',
+        !!interacting && 'rbc-addons-dnd-is-dragging'
+      )
+
+      return <Calendar {...props} components={this.components} />
+    }
+  }
+}
+
+export function withDragAndDropContenxt(Element) {
+  return class extends React.Component {
+    static propTypes = {
+      onEventDrop: PropTypes.func,
+      onEventResize: PropTypes.func,
+
+      draggableAccessor: accessor,
+      resizableAccessor: accessor,
+    }
+
+    static defaultProps = {
+      draggableAccessor: null,
+      resizableAccessor: null,
     }
 
     static childContextTypes = {
@@ -88,15 +121,6 @@ export default function withDragAndDrop(Calendar) {
 
     constructor(...args) {
       super(...args)
-
-      const { components } = this.props
-
-      this.components = mergeComponents(components, {
-        eventWrapper: EventWrapper,
-        eventContainerWrapper: EventContainerWrapper,
-        weekWrapper: WeekWrapper,
-      })
-
       this.state = { interacting: false }
     }
 
@@ -141,22 +165,12 @@ export default function withDragAndDrop(Calendar) {
     }
 
     render() {
-      const { selectable, ...props } = this.props
-      const { interacting } = this.state
+      const { ...props } = this.props
+
       delete props.onEventDrop
       delete props.onEventResize
 
-      props.selectable = selectable ? 'ignoreEvents' : false
-
-      props.className = cn(
-        props.className,
-        'rbc-addons-dnd',
-        !!interacting && 'rbc-addons-dnd-is-dragging'
-      )
-
-      return <Calendar {...props} components={this.components} />
+      return <Element {...props} />
     }
   }
-
-  return DragAndDropCalendar
 }
