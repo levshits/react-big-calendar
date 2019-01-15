@@ -64,6 +64,17 @@ export default function withDragAndDrop(Calendar) {
       step: 30,
     }
 
+    static contextTypes = {
+      draggable: PropTypes.shape({
+        onStart: PropTypes.func,
+        onEnd: PropTypes.func,
+        onBeginAction: PropTypes.func,
+        draggableAccessor: accessor,
+        resizableAccessor: accessor,
+        dragAndDropAction: PropTypes.object,
+      }),
+    }
+
     constructor(...args) {
       super(...args)
 
@@ -78,14 +89,15 @@ export default function withDragAndDrop(Calendar) {
 
     render() {
       const { selectable, ...props } = this.props
-      const { interacting } = this.state
+      const { draggable } = this.context
 
       props.selectable = selectable ? 'ignoreEvents' : false
 
       props.className = cn(
         props.className,
         'rbc-addons-dnd',
-        !!interacting && 'rbc-addons-dnd-is-dragging'
+        !!draggable.dragAndDropAction.interacting &&
+          'rbc-addons-dnd-is-dragging'
       )
 
       return <Calendar {...props} components={this.components} />
@@ -95,8 +107,8 @@ export default function withDragAndDrop(Calendar) {
   return CalendarWrapper
 }
 
-export function withDragAndDropContenxt(Element) {
-  class DragAndDropContenxt extends React.Component {
+export function withDragAndDropContext(Element) {
+  class DragAndDropContext extends React.Component {
     static propTypes = {
       onEventDrop: PropTypes.func,
       onEventResize: PropTypes.func,
@@ -176,5 +188,63 @@ export function withDragAndDropContenxt(Element) {
     }
   }
 
-  return DragAndDropContenxt
+  return DragAndDropContext
+}
+
+export function withDrag(Element) {
+  class DragWrapper extends React.Component {
+    static contextTypes = {
+      draggable: PropTypes.shape({
+        onStart: PropTypes.func,
+        onEnd: PropTypes.func,
+        onBeginAction: PropTypes.func,
+        draggableAccessor: accessor,
+        resizableAccessor: accessor,
+        dragAndDropAction: PropTypes.object,
+      }),
+    }
+
+    static propTypes = {
+      event: PropTypes.object.isRequired,
+      isDragging: PropTypes.bool,
+    }
+
+    handleStartDragging = e => {
+      if (e.button === 0) {
+        this.context.draggable.onBeginAction(this.props.event, 'move')
+      }
+    }
+
+    render() {
+      const { event } = this.props
+
+      const newProps = { ...this.props }
+
+      if (event.__isPreview) {
+        newProps.className = cn(
+          this.props.className,
+          'rbc-addons-dnd-drag-preview'
+        )
+        return <Element {...newProps} />
+      }
+
+      const { draggable } = this.context
+
+      newProps.onMouseDown = this.handleStartDragging
+      newProps.onTouchStart = this.handleStartDragging
+
+      if (
+        draggable.dragAndDropAction.interacting && // if an event is being dragged right now
+        draggable.dragAndDropAction.event === event // and it's the current event
+      ) {
+        newProps.className = cn(
+          this.props.className,
+          'rbc-addons-dnd-dragged-event'
+        )
+      }
+
+      return <Element {...newProps} />
+    }
+  }
+  return DragWrapper
 }

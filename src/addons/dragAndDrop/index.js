@@ -1,4 +1,7 @@
-import withDragAndDrop, { withDragAndDropContenxt } from './withDragAndDrop'
+import withDragAndDrop, {
+  withDragAndDropContext,
+  withDrag,
+} from './withDragAndDrop'
 export default withDragAndDrop
 
-export { withDragAndDropContenxt }
+export { withDragAndDropContext, withDrag }
